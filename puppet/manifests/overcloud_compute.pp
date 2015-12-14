@@ -77,13 +77,31 @@ include ::neutron
 if hiera('neutron::core_plugin') == 'neutron.plugins.nuage.plugin.NuagePlugin' {
   include ::nuage::vrs
   include ::nova::compute::neutron
+} elsif 'opendaylight' in hiera('neutron_mechanism_drivers') {
+
+  if str2bool(hiera('opendaylight_install', 'false')) {
+    $controller_ips = split(hiera('controller_node_ips'), ',')
+    $opendaylight_controller_ip = $controller_ips[0]
+  } else {
+    $opendaylight_controller_ip = hiera('opendaylight_controller_ip')
+  }
+
+  if str2bool(hiera('opendaylight_install', 'false')) {
+    class { 'neutron::plugins::ovs::opendaylight':
+      odl_controller_ip => $opendaylight_controller_ip,
+      tunnel_ip         => hiera('neutron::agents::ml2::ovs::local_ip'),
+      odl_port          => hiera('opendaylight_port'),
+      odl_username      => hiera('opendaylight_username'),
+      odl_password      => hiera('opendaylight_password'),
+    }
+  }
+
 } else {
   class { '::neutron::plugins::ml2':
     flat_networks        => split(hiera('neutron_flat_networks'), ','),
     tenant_network_types => [hiera('neutron_tenant_network_type')],
   }
-
-  class { '::neutron::agents::ml2::ovs':
+  class { 'neutron::agents::ml2::ovs':
     bridge_mappings => split(hiera('neutron_bridge_mappings'), ','),
     tunnel_types    => split(hiera('neutron_tunnel_types'), ','),
   }

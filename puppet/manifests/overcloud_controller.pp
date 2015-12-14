@@ -35,6 +35,13 @@ if hiera('step') >= 1 {
 
 if hiera('step') >= 2 {
 
+  if str2bool(hiera('opendaylight_install', 'false')) {
+    class {"opendaylight":
+      extra_features => ['odl-ovsdb-openstack'],
+      odl_rest_port  => hiera('opendaylight_port'),
+    }
+  }
+
   if count(hiera('ntp::servers')) > 0 {
     include ::ntp
   }
@@ -239,6 +246,33 @@ if hiera('step') >= 3 {
   # else use the default value of 'ml2'
   if hiera('neutron::core_plugin') == 'neutron.plugins.nuage.plugin.NuagePlugin' {
     include ::neutron::plugins::nuage
+  } elsif 'opendaylight' in hiera('neutron_mechanism_drivers') {
+
+    if str2bool(hiera('opendaylight_install', 'false')) {
+      $controller_ips = split(hiera('controller_node_ips'), ',')
+      $opendaylight_controller_ip = $controller_ips[0]
+    } else {
+      $opendaylight_controller_ip = hiera('opendaylight_controller_ip')
+    }
+
+    class { 'neutron::plugins::ml2::opendaylight':
+      odl_controller_ip => $opendaylight_controller_ip,
+      odl_username      => hiera('opendaylight_username'),
+      odl_password      => hiera('opendaylight_password'),
+      odl_port          => hiera('opendaylight_port'),
+    }
+
+    if str2bool(hiera('opendaylight_install', 'false')) {
+      class { 'neutron::plugins::ovs::opendaylight':
+        odl_controller_ip => $opendaylight_controller_ip,
+        tunnel_ip         => hiera('neutron::agents::ml2::ovs::local_ip'),
+        odl_port          => hiera('opendaylight_port'),
+        odl_username      => hiera('opendaylight_username'),
+        odl_password      => hiera('opendaylight_password'),
+      }
+    }
+
+
   } else {
     include ::neutron::agents::l3
     include ::neutron::agents::dhcp
@@ -267,12 +301,6 @@ if hiera('step') >= 3 {
       class { '::neutron::agents::n1kv_vem':
         n1kv_source  => hiera('n1kv_vem_source', undef),
         n1kv_version => hiera('n1kv_vem_version', undef),
-      }
-
-      class { '::n1k_vsm':
-        n1kv_source       => hiera('n1kv_vsm_source', undef),
-        n1kv_version      => hiera('n1kv_vsm_version', undef),
-        pacemaker_control => false,
       }
     }
 

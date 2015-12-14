@@ -474,6 +474,23 @@ parameters:
     default: ''
     description: Comma-separated list of ntp servers
     type: comma_delimited_list
+  OpenDaylightPort:
+    default: 8081
+    description: Set opendaylight service port
+    type: number
+  OpenDaylightInstall:
+    default: false
+    description: Whether to install OpenDaylight on the control nodes.
+    type: boolean
+  OpenDaylightUsername:
+    default: 'admin'
+    description: The username for the opendaylight server.
+    type: string
+  OpenDaylightPassword:
+    default: 'admin'
+    type: string
+    description: The password for the opendaylight server.
+    hidden: true
   PcsdPassword:
     type: string
     description: The password for the 'pcsd' user.
@@ -878,6 +895,10 @@ resources:
             template: tripleo-CLUSTER
             params:
               CLUSTER: {get_param: MysqlClusterUniquePart}
+        opendaylight_port: {get_param: OpenDaylightPort}
+        opendaylight_install: {get_param: OpenDaylightInstall}
+        opendaylight_username: {get_param: OpenDaylightUsername}
+        opendaylight_password: {get_param: OpenDaylightPassword}
         neutron_flat_networks: {get_param: NeutronFlatNetworks}
         neutron_metadata_proxy_shared_secret: {get_param: NeutronMetadataProxySharedSecret}
         neutron_agent_mode: {get_param: NeutronAgentMode}
@@ -1206,6 +1227,12 @@ resources:
                 mysql_cluster_name: {get_input: mysql_cluster_name}
                 mysql_bind_host: {get_input: mysql_network}
                 mysql_virtual_ip: {get_input: mysql_virtual_ip}
+
+                # OpenDaylight
+                opendaylight_port: {get_input: opendaylight_port}
+                opendaylight_install: {get_input: opendaylight_install}
+                opendaylight_username: {get_input: opendaylight_username}
+                opendaylight_password: {get_input: opendaylight_password}
 
                 # Neutron
                 neutron::bind_host: {get_input: neutron_api_network}
