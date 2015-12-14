@@ -30,6 +30,13 @@ if hiera('step') >= 1 {
 
 if hiera('step') >= 2 {
 
+  if str2bool(hiera('opendaylight_install', 'false')) {
+    class {"opendaylight":
+      extra_features => ['odl-ovsdb-openstack'],
+      odl_rest_port  => hiera('opendaylight_port'),
+    }
+  }
+
   if count(hiera('ntp::servers')) > 0 {
     include ::ntp
   }
@@ -243,10 +250,43 @@ if hiera('step') >= 3 {
     tenant_network_types => [hiera('neutron_tenant_network_type')],
     mechanism_drivers    => [hiera('neutron_mechanism_drivers')],
   }
-  class { '::neutron::agents::ml2::ovs':
-    bridge_mappings => split(hiera('neutron_bridge_mappings'), ','),
-    tunnel_types    => split(hiera('neutron_tunnel_types'), ','),
+
+  if 'opendaylight' in hiera('neutron_mechanism_drivers') {
+
+    if str2bool(hiera('opendaylight_install', 'false')) {
+      $controller_ips = split(hiera('controller_node_ips'), ',')
+      $opendaylight_controller_ip = $controller_ips[0]
+    } else {
+      $opendaylight_controller_ip = hiera('opendaylight_controller_ip')
+    }
+
+    class { 'neutron::plugins::ml2::opendaylight':
+      odl_controller_ip => $opendaylight_controller_ip,
+      odl_username      => hiera('opendaylight_username'),
+      odl_password      => hiera('opendaylight_password'),
+      odl_port          => hiera('opendaylight_port'),
+    }
+
+    if str2bool(hiera('opendaylight_install', 'false')) {
+      class { 'neutron::plugins::ovs::opendaylight':
+        odl_controller_ip => $opendaylight_controller_ip,
+        tunnel_ip         => hiera('neutron::agents::ml2::ovs::local_ip'),
+        odl_port          => hiera('opendaylight_port'),
+        odl_username      => hiera('opendaylight_username'),
+        odl_password      => hiera('opendaylight_password'),
+      }
+    }
+
+  } else {
+
+    class { 'neutron::agents::ml2::ovs':
+      bridge_mappings => split(hiera('neutron_bridge_mappings'), ','),
+      tunnel_types => split(hiera('neutron_tunnel_types'), ','),
+    }
+
+    Service['neutron-server'] -> Service['neutron-ovs-agent-service']
   }
+
   if 'cisco_n1kv' in hiera('neutron_mechanism_drivers') {
     include ::neutron::plugins::ml2::cisco::nexus1000v
 
@@ -282,7 +322,6 @@ if hiera('step') >= 3 {
 
   Service['neutron-server'] -> Service['neutron-dhcp-service']
   Service['neutron-server'] -> Service['neutron-l3']
-  Service['neutron-server'] -> Service['neutron-ovs-agent-service']
   Service['neutron-server'] -> Service['neutron-metadata']
 
   include ::cinder
