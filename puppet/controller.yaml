@@ -757,6 +757,7 @@ resources:
             params:
               IP: {get_attr: [NetIpMap, net_ip_uri_map, {get_param: [ServiceNetMap, CinderIscsiNetwork]}]}
         cinder_api_network: {get_attr: [NetIpMap, net_ip_map, {get_param: [ServiceNetMap, CinderApiNetwork]}]}
+        congress_api_network: {get_attr: [NetIpMap, net_ip_map, {get_param: [ServiceNetMap, CongressApiNetwork]}]}
         glance_api_network: {get_attr: [NetIpMap, net_ip_map, {get_param: [ServiceNetMap, GlanceApiNetwork]}]}
         glance_registry_network: {get_attr: [NetIpMap, net_ip_map, {get_param: [ServiceNetMap, GlanceRegistryNetwork]}]}
         glance_api_servers: { get_param: [EndpointMap, GlanceInternal, uri]}
@@ -885,6 +886,9 @@ resources:
                 cinder::keystone::auth::admin_url_v2: {get_input: cinder_admin_url_v2 }
                 cinder::keystone::auth::password: {get_input: cinder_password }
                 cinder::keystone::auth::region: {get_input: keystone_region}
+
+                # Congress
+                congress::bind_host: {get_param: congress_api_network}
 
                 # Glance
                 glance::api::bind_host: {get_input: glance_api_network}

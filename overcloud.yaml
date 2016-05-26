@@ -536,6 +536,7 @@ parameters:
       MongoDbNetwork: internal_api
       CinderApiNetwork: internal_api
       CinderIscsiNetwork: storage
+      CongressApiNetwork: internal_api
       GlanceApiNetwork: storage
       GlanceRegistryNetwork: internal_api
       KeystoneAdminApiNetwork: ctlplane # allows undercloud to config endpoints
@@ -569,6 +570,7 @@ parameters:
       - OS::TripleO::Services::CinderApi
       - OS::TripleO::Services::CinderScheduler
       - OS::TripleO::Services::CinderVolume
+      - OS::TripleO::Services::Congress
       - OS::TripleO::Services::Keystone
       - OS::TripleO::Services::GlanceApi
       - OS::TripleO::Services::GlanceRegistry
@@ -796,6 +798,7 @@ resources:
       CeilometerApiVirtualIP: {get_attr: [VipMap, net_ip_uri_map, {get_param: [ServiceNetMap, CeilometerApiNetwork]}]}
       AodhApiVirtualIP: {get_attr: [VipMap, net_ip_uri_map, {get_param: [ServiceNetMap, AodhApiNetwork]}]}
       CinderApiVirtualIP: {get_attr: [VipMap, net_ip_uri_map, {get_param: [ServiceNetMap, CinderApiNetwork]}]}
+      CongressApiVirtualIP: {get_attr: [VipMap, net_ip_uri_map, {get_param: [ServiceNetMap, CongressApiNetwork]}]}
       GlanceApiVirtualIP: {get_attr: [VipMap, net_ip_uri_map, {get_param: [ServiceNetMap, GlanceApiNetwork]}]}
       GlanceRegistryVirtualIP: {get_attr: [VipMap, net_ip_uri_map, {get_param: [ServiceNetMap, GlanceRegistryNetwork]}]}
       GnocchiApiVirtualIP: {get_attr: [VipMap, net_ip_uri_map, {get_param: [ServiceNetMap, GnocchiApiNetwork]}]}
@@ -894,6 +897,7 @@ resources:
           AodhApiVirtualIP: {get_attr: [VipMap, net_ip_map, {get_param: [ServiceNetMap, AodhApiNetwork]}]}
           GnocchiApiVirtualIP: {get_attr: [VipMap, net_ip_map, {get_param: [ServiceNetMap, GnocchiApiNetwork]}]}
           CinderApiVirtualIP: {get_attr: [VipMap, net_ip_map, {get_param: [ServiceNetMap, CinderApiNetwork]}]}
+          CongressApiVirtualIP: {get_attr: [VipMap, net_ip_map, {get_param: [ServiceNetMap, CongressApiNetwork]}]}
           HeatApiVirtualIP: {get_attr: [VipMap, net_ip_map, {get_param: [ServiceNetMap, HeatApiNetwork]}]}
           HeatApiVirtualIPUri: {get_attr: [VipMap, net_ip_uri_map, {get_param: [ServiceNetMap, HeatApiNetwork]}]}
           NovaApiVirtualIP: {get_attr: [VipMap, net_ip_map, {get_param: [ServiceNetMap, NovaApiNetwork]}]}
@@ -1145,6 +1149,7 @@ resources:
       heat_api_node_ips: {get_attr: [ControllerIpListMap, net_ip_map, {get_param: [ServiceNetMap, HeatApiNetwork]}]}
       swift_proxy_node_ips: {get_attr: [ControllerIpListMap, net_ip_map, {get_param: [ServiceNetMap, SwiftProxyNetwork]}]}
       ceilometer_api_node_ips: {get_attr: [ControllerIpListMap, net_ip_map, {get_param: [ServiceNetMap, CeilometerApiNetwork]}]}
+      congress_api_node_ips: {get_attr: [ControllerIpListMap, net_ip_map, {get_param: [ServiceNetMap, CongressApiNetwork]}]}
       aodh_api_node_ips: {get_attr: [ControllerIpListMap, net_ip_map, {get_param: [ServiceNetMap, AodhApiNetwork]}]}
       gnocchi_api_node_ips: {get_attr: [ControllerIpListMap, net_ip_map, {get_param: [ServiceNetMap, GnocchiApiNetwork]}]}
       nova_api_node_ips: {get_attr: [ControllerIpListMap, net_ip_map, {get_param: [ServiceNetMap, NovaApiNetwork]}]}
@@ -1261,6 +1266,7 @@ resources:
         keystone_public_api_vip: {get_attr: [VipMap, net_ip_map, {get_param: [ServiceNetMap, KeystonePublicApiNetwork]}]}
         neutron_api_vip: {get_attr: [VipMap, net_ip_map, {get_param: [ServiceNetMap, NeutronApiNetwork]}]}
         cinder_api_vip: {get_attr: [VipMap, net_ip_map, {get_param: [ServiceNetMap, CinderApiNetwork]}]}
+        congress_api_vip: {get_attr: [VipMap, net_ip_map, {get_param: [ServiceNetMap, CongressApiNetwork]}]}
         glance_api_vip: {get_attr: [VipMap, net_ip_map, {get_param: [ServiceNetMap, GlanceApiNetwork]}]}
         glance_registry_vip: {get_attr: [VipMap, net_ip_map, {get_param: [ServiceNetMap, GlanceRegistryNetwork]}]}
         swift_proxy_vip: {get_attr: [VipMap, net_ip_map, {get_param: [ServiceNetMap, SwiftProxyNetwork]}]}
@@ -1541,6 +1547,9 @@ outputs:
   CinderInternalVip:
     description: VIP for Cinder API internal endpoint
     value: {get_attr: [VipMap, net_ip_map, {get_param: [ServiceNetMap, CinderApiNetwork]}]}
+  CongressInternalVip:
+    description: VIP for Congress API internal endpoint
+    value: {get_attr: [VipMap, net_ip_map, {get_param: [ServiceNetMap, CongessApiNetwork]}]}
   GlanceInternalVip:
     description: VIP for Glance API internal endpoint
     value: {get_attr: [VipMap, net_ip_map, {get_param: [ServiceNetMap, GlanceApiNetwork]}]}
